@@ -8,7 +8,7 @@ This is my working setup, cleaned of client data. Paths and section names match 
 
 ## The problem
 
-My session start rule said: read `CLAUDE.md`, then `Dashboard.md`, then the project state log `_стан.md`. After a year these files were 434 KB, about 129,500 tokens.
+My session start rule said: read `CLAUDE.md`, then `Dashboard.md`, then the project state log `_стан.md`. Within two months these files had grown to 434 KB, about 129,500 tokens.
 
 You do not pay for that once. The context is sent again on every step as cache read. In 9 days I had 1.36 billion cache-read tokens, about 288,000 per step. So the real question is not "does it fit in the window". It is "how much context do I carry into every step".
 
