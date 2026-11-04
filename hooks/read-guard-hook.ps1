@@ -41,6 +41,8 @@ try {
     if ($ti.offset -or $ti.limit) { Allow }
 
     $path = $ti.file_path
+    # UNC (\\host\share): ne torkayemosia - Test-Path pishov by po SMB i viddav by NTLM (audyt 30.10)
+    if ($path -match '^(\\\\|//)') { Allow }
     if (-not $path -or -not (Test-Path $path)) { Allow }
 
     $item = Get-Item $path
