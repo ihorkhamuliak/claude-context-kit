@@ -18,6 +18,11 @@ You do not pay for that once. The context is sent again on every step as cache r
 hooks/
   session-start-hook.ps1   puts the brief into the session (fail-safe, off switch)
   read-guard-hook.ps1      blocks reading a file over 100 KB in full (fail-safe, off switch)
+  bash-guard.py            blocks repeated shell mistakes: co-author trailer, push behind remote,
+                           personal data in a public repo, unbounded ssh loops, pgrep -f via ssh;
+                           asks before foreign code and backup deletes
+  bg-guard.py              reminds Claude when a timed-out command was moved to the background
+  test-guards.py           each guard must fire on a known violation and pass a clean command
 scripts/
   brief.ps1                builds the brief: the fresh part of each file within a character
                            budget, the rest as a map with line numbers, growth signals on top
@@ -60,6 +65,10 @@ Re-reading tool results is about 9% of my load. My first number was 21%, because
 
 The brief grew from 57 to 98 KB in 17 days and nobody noticed, because the check was "when I remember". Now the brief adds a warning block on top when something gets big: the memory index, `CLAUDE.md`, the dashboard, the state log, or the brief itself. On a normal day there is no block. The test proves the signal works by lowering the limits until it must fire.
 
+### 6. A forgotten wait loop logged into my server 3,000 times
+
+Claude waited for a server script with `until ssh … '! pgrep -f job'; do sleep 20; done`. `pgrep -f` matched its own remote shell, so the loop could never end. After 600 seconds the Bash tool moved it to the background, and nobody stopped it. It ran for 18 hours. My login alert fired 248 times, and only while the laptop was on mobile internet: from home the same loop was invisible. The rule was already in memory and had been broken twice before. So it is a hook now: `bash-guard.py` refuses an ssh loop without a bound and `pgrep -f` through ssh, and `bg-guard.py` speaks up the moment a command is moved to the background.
+
 ## Setup
 
 1. Point the scripts to your vault and project: `setx CLAUDE_VAULT "C:\path\to\vault"` and `setx CLAUDE_PROJECT "02 - Projects\my-project"` (the folder with `_стан.md`). Add `setx CLAUDE_MEMORY_DIR "..."` if you use Claude Code memory.
@@ -88,6 +97,8 @@ The brief grew from 57 to 98 KB in 17 days and nobody noticed, because the check
 Save the `.ps1` files as UTF-8 with BOM: Windows PowerShell 5.1 breaks Cyrillic without it.
 
 Off switches: create `.claude\brief-off` or `.claude\read-guard-off` in the vault. No restart needed.
+
+5. Optional, global guards in `~/.claude/settings.json`: `bash-guard.py` as `PreToolUse` and `bg-guard.py` as `PostToolUse`, both with `"matcher": "Bash|PowerShell"` and `"command": "python", "args": ["<path>/hooks/<name>.py"]`. Set `GUARD_OWNER` to your GitHub login, put one regex per line into `~/.claude/leak-denylist.txt` (client names, your phone, server IP), run `python hooks/test-guards.py`. Off switches: `~/.claude/bash-guard-off`, `~/.claude/bg-guard-off`.
 
 ## Credits
 
